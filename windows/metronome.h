@@ -21,7 +21,9 @@ class Metronome
 public:
     Metronome(const std::vector<uint8_t> &mainFileBytes,
               const std::vector<uint8_t> &accentedFileBytes,
-              int bpm, int timeSignature, double volume, int sampleRate);
+              int bpm, int timeSignature, double volume, int sampleRate,
+              int preCountBars = 0,
+              const std::vector<uint8_t> &preCountFileBytes = {});
     ~Metronome();
 
     void Play();
@@ -59,6 +61,8 @@ private:
     std::vector<int16_t> audioBuffer;
     std::vector<int16_t> mainSound;
     std::vector<int16_t> accentedSound;
+    std::vector<int16_t> preCountSound;
+    int preCountBarsCount = 0;
     int sampleRate = 44100;
     int beatLength = 0;
     double audioVolume = 1.0;

@@ -34,6 +34,8 @@ class MethodChannelMetronome extends MetronomePlatform {
     bool enableTickCallback = false,
     int timeSignature = 4,
     int sampleRate = 44100,
+    int preCountBars = 0,
+    String preCountSoundPath = '',
   }) async {
     if (mainPath == '') {
       throw Exception('Main path cannot be empty');
@@ -50,10 +52,17 @@ class MethodChannelMetronome extends MetronomePlatform {
     if (sampleRate <= 0) {
       throw Exception('sampleRate must be greater than 0');
     }
+    if (preCountBars < 0) {
+      throw Exception('preCountBars must be greater than or equal to 0');
+    }
     Uint8List mainFileBytes = await loadFileBytes(mainPath);
     Uint8List accentedFileBytes = Uint8List.fromList([]);
     if (accentedPath != '') {
       accentedFileBytes = await loadFileBytes(accentedPath);
+    }
+    Uint8List preCountFileBytes = Uint8List.fromList([]);
+    if (preCountSoundPath != '') {
+      preCountFileBytes = await loadFileBytes(preCountSoundPath);
     }
     try {
       await methodChannel.invokeMethod<void>('init', {
@@ -64,6 +73,8 @@ class MethodChannelMetronome extends MetronomePlatform {
         'enableTickCallback': enableTickCallback,
         'timeSignature': timeSignature,
         'sampleRate': sampleRate,
+        'preCountBars': preCountBars,
+        'preCountFileBytes': preCountFileBytes,
       });
     } catch (e) {
       if (kDebugMode) {
