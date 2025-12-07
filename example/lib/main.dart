@@ -41,7 +41,7 @@ class _MyAppState extends State<MyApp> {
       'assets/audio/${mainFileName}44_wav.wav',
       accentedPath: 'assets/audio/${accentedFileName}44_wav.wav',
       preCountBars: preCountBars,
-      preCountSoundPath: 'assets/audio/${preCountFileName}44_wav.wav',
+      preCountAudioPath: 'assets/audio/${preCountFileName}44_wav.wav',
       bpm: bpm,
       volume: vol,
       enableTickCallback: true,
@@ -293,7 +293,7 @@ class _MyAppState extends State<MyApp> {
           'assets/audio/${mainFileName}44_wav.wav',
           accentedPath: 'assets/audio/${accentedFileName}44_wav.wav',
           preCountBars: preCountBars,
-          preCountSoundPath: 'assets/audio/${preCountFileName}44_wav.wav',
+          preCountAudioPath: 'assets/audio/${preCountFileName}44_wav.wav',
           bpm: bpm,
           volume: vol,
           enableTickCallback: true,
@@ -318,7 +318,7 @@ class _MyAppState extends State<MyApp> {
           'assets/audio/${mainFileName}44_wav.wav',
           accentedPath: 'assets/audio/${accentedFileName}44_wav.wav',
           preCountBars: preCountBars,
-          preCountSoundPath: 'assets/audio/${preCountFileName}44_wav.wav',
+          preCountAudioPath: 'assets/audio/${preCountFileName}44_wav.wav',
           bpm: bpm,
           volume: vol,
           enableTickCallback: true,
@@ -330,3 +330,4 @@ class _MyAppState extends State<MyApp> {
     );
   }
 }
+
