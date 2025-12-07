@@ -85,9 +85,11 @@ class MethodChannelMetronome extends MetronomePlatform {
   }
 
   @override
-  Future<void> play() async {
+  Future<void> play({int? preCountBars}) async {
     try {
-      await methodChannel.invokeMethod<void>('play');
+      await methodChannel.invokeMethod<void>('play', {
+        if (preCountBars != null) 'preCountBars': preCountBars,
+      });
     } catch (e) {
       if (kDebugMode) {
         print(e);
