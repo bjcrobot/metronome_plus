@@ -47,6 +47,8 @@ class MetronomeWeb extends MetronomePlatform {
     bool enableTickCallback = false,
     int timeSignature = 4,
     int sampleRate = 44100,
+    int preCountBars = 0,
+    String preCountAudioPath = '',
   }) async {
     _sampleRate = sampleRate;
     _audioContext = web.AudioContext(
@@ -69,7 +71,7 @@ class MetronomeWeb extends MetronomePlatform {
   }
 
   @override
-  Future<void> play() async {
+  Future<void> play({int? preCountBars}) async {
     if (_isPlaying) return;
     _isPlaying = true;
     _currentTick = 0;

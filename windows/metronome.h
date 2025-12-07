@@ -48,6 +48,8 @@ private:
     std::shared_ptr<flutter::EventSink<flutter::EncodableValue>> eventTickSink;
     std::vector<int16_t> Metronome::byteArrayToShortArray(const std::vector<uint8_t> &byteArray);
     std::vector<int16_t> Metronome::generateBuffer();
+    std::vector<int16_t> Metronome::generateMainBuffer();
+    bool isFirstPlay = true;
     static void CALLBACK WaveOutProc(HWAVEOUT hwo, UINT uMsg, DWORD_PTR dwInstance, DWORD_PTR dwParam1, DWORD_PTR dwParam2);
     HWAVEOUT hWaveOut;
     size_t playCursor;

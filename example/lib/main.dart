@@ -18,6 +18,7 @@ class _MyAppState extends State<MyApp> {
   int bpm = 120;
   int vol = 50;
   int timeSignature = 4;
+  int preCountBars = 0;
   String metronomeIcon = 'assets/metronome-left.png';
   String metronomeIconRight = 'assets/metronome-right.png';
   String metronomeIconLeft = 'assets/metronome-left.png';
@@ -31,6 +32,7 @@ class _MyAppState extends State<MyApp> {
   ];
   String mainFileName = 'claves';
   String accentedFileName = 'woodblock_high';
+  String preCountFileName = 'base';
   int currentTick = 0;
   @override
   void initState() {
@@ -38,6 +40,8 @@ class _MyAppState extends State<MyApp> {
     _metronomePlugin.init(
       'assets/audio/${mainFileName}44_wav.wav',
       accentedPath: 'assets/audio/${accentedFileName}44_wav.wav',
+      preCountBars: preCountBars,
+      preCountSoundPath: 'assets/audio/${preCountFileName}44_wav.wav',
       bpm: bpm,
       volume: vol,
       enableTickCallback: true,
@@ -140,6 +144,29 @@ class _MyAppState extends State<MyApp> {
                   _buildTimeSignButton('3/4', 3),
                   _buildTimeSignButton('4/4', 4),
                 ],
+              ),
+              const Text(
+                'Pre-count Bars:',
+                style: TextStyle(fontSize: 20),
+              ),
+              Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: [
+                  _buildPreCountButton('None', 0),
+                  _buildPreCountButton('1 bar', 1),
+                  _buildPreCountButton('2 bars', 2),
+                  _buildPreCountButton('4 bars', 4),
+                ],
+              ),
+              const Text(
+                'Pre-count Sound:',
+                style: TextStyle(fontSize: 20),
+              ),
+              Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: wavs.map((wav) => _buildPreCountSoundButton(wav)).toList(),
               ),
               const Text(
                 'Main file:',
@@ -248,6 +275,56 @@ class _MyAppState extends State<MyApp> {
         currentTick = 0;
         timeSignature = ts;
         _metronomePlugin.setTimeSignature(ts);
+        setState(() {});
+      },
+    );
+  }
+
+  Widget _buildPreCountButton(String text, int bars) {
+    return ElevatedButton(
+      child: Text(
+        text,
+        style: TextStyle(color: bars == preCountBars ? Colors.red : null),
+      ),
+      onPressed: () async {
+        currentTick = 0;
+        preCountBars = bars;
+        await _metronomePlugin.init(
+          'assets/audio/${mainFileName}44_wav.wav',
+          accentedPath: 'assets/audio/${accentedFileName}44_wav.wav',
+          preCountBars: preCountBars,
+          preCountSoundPath: 'assets/audio/${preCountFileName}44_wav.wav',
+          bpm: bpm,
+          volume: vol,
+          enableTickCallback: true,
+          timeSignature: timeSignature,
+          sampleRate: 44100,
+        );
+        setState(() {});
+      },
+    );
+  }
+
+  Widget _buildPreCountSoundButton(String name) {
+    return ElevatedButton(
+      child: Text(
+        name,
+        style: TextStyle(color: preCountFileName == name ? Colors.red : null),
+      ),
+      onPressed: () async {
+        preCountFileName = name;
+        currentTick = 0;
+        await _metronomePlugin.init(
+          'assets/audio/${mainFileName}44_wav.wav',
+          accentedPath: 'assets/audio/${accentedFileName}44_wav.wav',
+          preCountBars: preCountBars,
+          preCountSoundPath: 'assets/audio/${preCountFileName}44_wav.wav',
+          bpm: bpm,
+          volume: vol,
+          enableTickCallback: true,
+          timeSignature: timeSignature,
+          sampleRate: 44100,
+        );
         setState(() {});
       },
     );
