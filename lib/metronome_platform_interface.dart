@@ -36,6 +36,8 @@ abstract class MetronomePlatform extends PlatformInterface {
     bool enableTickCallback = false,
     int timeSignature = 4,
     int sampleRate = 44100,
+    int preCountBars = 0,
+    String preCountAudioPath = '',
   }) {
     throw UnimplementedError('init() has not been implemented.');
   }

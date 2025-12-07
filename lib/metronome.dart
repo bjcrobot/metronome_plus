@@ -29,6 +29,8 @@ class Metronome {
   /// @param volume: the volume of the metronome, default `50`%
   /// @param timeSignature: the timeSignature of the metronome, default `4`
   /// @param sampleRate: the sampleRate of the metronome, default `44100`
+  /// @param preCountBars: number of bars to play as pre-count, default `0`
+  /// @param preCountSoundPath: the path of the pre-count audio file, default ''
   /// ```
   Future<void> init(
     String mainPath, {
@@ -38,6 +40,8 @@ class Metronome {
     bool enableTickCallback = false,
     int timeSignature = 4,
     int sampleRate = 44100,
+    int preCountBars = 0,
+    String preCountAudioPath = '',
   }) async {
     try {
       MetronomePlatform.instance.init(
@@ -48,6 +52,8 @@ class Metronome {
         enableTickCallback: enableTickCallback,
         timeSignature: timeSignature,
         sampleRate: sampleRate,
+        preCountBars: preCountBars,
+        preCountAudioPath: preCountAudioPath,
       );
       _initialized = true;
       return;

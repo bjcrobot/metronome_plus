@@ -70,8 +70,10 @@ namespace metronome
       double volume = std::get<double>(arguments[flutter::EncodableValue("volume")]);
       int sampleRate = std::get<int>(arguments[flutter::EncodableValue("sampleRate")]);
       bool enableTickCallback = std::get<bool>(arguments[flutter::EncodableValue("enableTickCallback")]);
+      int preCountBars = std::get<int>(arguments[flutter::EncodableValue("preCountBars")]);
+      std::vector<uint8_t> preCountFileBytes = std::get<std::vector<uint8_t>>(arguments[flutter::EncodableValue("preCountFileBytes")]);
 
-      metronome = std::make_unique<Metronome>(mainFileBytes, accentedFileBytes, bpm, timeSignature, volume, sampleRate);
+      metronome = std::make_unique<Metronome>(mainFileBytes, accentedFileBytes, bpm, timeSignature, volume, sampleRate, preCountBars, preCountFileBytes);
       if (enableTickCallback && eventSink)
       {
         metronome->EnableTickCallback(eventSink);
