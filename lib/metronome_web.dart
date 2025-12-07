@@ -37,9 +37,6 @@ class MetronomeWeb extends MetronomePlatform {
   int _scheduleTimer = 0;
   final double _lookahead = 0.1;
   final double _scheduleInterval = 0.05;
-  int _preCountBars = 0;
-  web.AudioBuffer? _preCountSoundBuffer;
-  int _preCountTicks = 0;
 
   @override
   Future<void> init(
@@ -66,12 +63,6 @@ class MetronomeWeb extends MetronomePlatform {
       _accentedSoundBuffer = _mainSoundBuffer;
     } else {
       _accentedSoundBuffer = await _bytesToAudioBuffer(accentedPath);
-    }
-    _preCountBars = preCountBars;
-    if (preCountAudioPath != '') {
-      _preCountSoundBuffer = await _bytesToAudioBuffer(preCountAudioPath);
-    } else {
-      _preCountSoundBuffer = _mainSoundBuffer;
     }
     _bpm = bpm;
     _timeSignature = timeSignature;
