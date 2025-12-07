@@ -48,11 +48,11 @@ class _MyAppState extends State<MyApp> {
       timeSignature: timeSignature,
       sampleRate: 44100,
     );
-    print("init:${_metronomePlugin.isInitialized}");
+    debugPrint("init:${_metronomePlugin.isInitialized}");
     _metronomePlugin.tickStream.listen(
       (int tick) {
         currentTick = tick;
-        print("tick: $tick");
+        debugPrint("tick: $tick");
         if (metronomeIcon == metronomeIconRight) {
           metronomeIcon = metronomeIconLeft;
         } else {
