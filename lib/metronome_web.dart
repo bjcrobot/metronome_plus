@@ -37,6 +37,9 @@ class MetronomeWeb extends MetronomePlatform {
   int _scheduleTimer = 0;
   final double _lookahead = 0.1;
   final double _scheduleInterval = 0.05;
+  int _preCountBars = 0;
+  web.AudioBuffer? _preCountSoundBuffer;
+  int _preCountTicks = 0;
 
   @override
   Future<void> init(
@@ -47,6 +50,8 @@ class MetronomeWeb extends MetronomePlatform {
     bool enableTickCallback = false,
     int timeSignature = 4,
     int sampleRate = 44100,
+    int preCountBars = 0,
+    String preCountAudioPath = '',
   }) async {
     _sampleRate = sampleRate;
     _audioContext = web.AudioContext(
@@ -62,6 +67,12 @@ class MetronomeWeb extends MetronomePlatform {
     } else {
       _accentedSoundBuffer = await _bytesToAudioBuffer(accentedPath);
     }
+    _preCountBars = preCountBars;
+    if (preCountAudioPath != '') {
+      _preCountSoundBuffer = await _bytesToAudioBuffer(preCountAudioPath);
+    } else {
+      _preCountSoundBuffer = _mainSoundBuffer;
+    }
     _bpm = bpm;
     _timeSignature = timeSignature;
     _volume = volume / 100;
@@ -69,7 +80,7 @@ class MetronomeWeb extends MetronomePlatform {
   }
 
   @override
-  Future<void> play() async {
+  Future<void> play({int? preCountBars}) async {
     if (_isPlaying) return;
     _isPlaying = true;
     _currentTick = 0;
