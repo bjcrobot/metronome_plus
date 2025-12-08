@@ -187,7 +187,7 @@ public class Metronome {
                 System.arraycopy(sound, 0, bufferBar, i * framesPerBeat, soundLength);
             }
         }
-        updated = false;
+        // updated フラグはここでは変更しない
         return bufferBar;
     }
 
@@ -237,6 +237,7 @@ public class Metronome {
                     }
                     if (updated || audioBuffer == null) {
                         audioBuffer = generateBuffer();
+                        updated = false;  // バッファ生成後すぐにリセット
                     }
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                         audioTrack.write(audioBuffer, 0, audioBuffer.length, AudioTrack.WRITE_BLOCKING);
