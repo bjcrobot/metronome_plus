@@ -41,7 +41,8 @@ class Metronome {
     int timeSignature = 4,
     int sampleRate = 44100,
     int preCountBars = 0,
-    String preCountAudioPath = '',
+    String preCountMainPath = '',
+    String preCountAccentedPath = '',
   }) async {
     try {
       MetronomePlatform.instance.init(
@@ -53,7 +54,8 @@ class Metronome {
         timeSignature: timeSignature,
         sampleRate: sampleRate,
         preCountBars: preCountBars,
-        preCountAudioPath: preCountAudioPath,
+        preCountMainPath: preCountMainPath,
+        preCountAccentedPath: preCountAccentedPath,
       );
       _initialized = true;
       return;

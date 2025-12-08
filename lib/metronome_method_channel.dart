@@ -35,7 +35,8 @@ class MethodChannelMetronome extends MetronomePlatform {
     int timeSignature = 4,
     int sampleRate = 44100,
     int preCountBars = 0,
-    String preCountAudioPath = '',
+    String preCountMainPath = '',
+    String preCountAccentedPath = '',
   }) async {
     if (mainPath == '') {
       throw Exception('Main path cannot be empty');
@@ -61,9 +62,13 @@ class MethodChannelMetronome extends MetronomePlatform {
       accentedFileBytes = await loadFileBytes(accentedPath);
     }
     
-    Uint8List preCountFileBytes = Uint8List.fromList([]);
-    if (preCountAudioPath != '') {
-      preCountFileBytes = await loadFileBytes(preCountAudioPath);
+    Uint8List preCountMainFileBytes = Uint8List.fromList([]);
+    if (preCountMainPath != '') {
+      preCountMainFileBytes = await loadFileBytes(preCountMainPath);
+    }
+    Uint8List preCountAccentedFileBytes = Uint8List.fromList([]);
+    if (preCountAccentedPath != '') {
+      preCountAccentedFileBytes = await loadFileBytes(preCountAccentedPath);
     }
     try {
       await methodChannel.invokeMethod<void>('init', {
@@ -75,7 +80,8 @@ class MethodChannelMetronome extends MetronomePlatform {
         'timeSignature': timeSignature,
         'sampleRate': sampleRate,
         'preCountBars': preCountBars,
-        'preCountFileBytes': preCountFileBytes,
+        'preCountMainFileBytes': preCountMainFileBytes,
+        'preCountAccentedFileBytes': preCountAccentedFileBytes,
       });
     } catch (e) {
       if (kDebugMode) {

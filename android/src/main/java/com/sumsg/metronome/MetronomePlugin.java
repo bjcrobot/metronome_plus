@@ -51,7 +51,16 @@ public class MetronomePlugin implements FlutterPlugin, MethodCallHandler {
         metronomeInit(call);
         break;
       case "play":
-        metronome.play();
+        if (metronome == null) {
+          result.error("not_initialized", "Metronome not initialized", null);
+          break;
+        }
+        Integer preCountBarsOverride = call.argument("preCountBars");
+        if (preCountBarsOverride != null) {
+          metronome.play(preCountBarsOverride);
+        } else {
+          metronome.play();
+        }
         break;
       case "pause":
         metronome.pause();
@@ -107,6 +116,16 @@ public class MetronomePlugin implements FlutterPlugin, MethodCallHandler {
     if (accentedFileBytes == null) {
       accentedFileBytes = new byte[0];
     }
+
+    byte[] preCountMainFileBytes = call.argument("preCountMainFileBytes");
+    if (preCountMainFileBytes == null) {
+      preCountMainFileBytes = new byte[0];
+    }
+
+    byte[] preCountAccentedFileBytes = call.argument("preCountAccentedFileBytes");
+    if (preCountAccentedFileBytes == null) {
+      preCountAccentedFileBytes = new byte[0];
+    }
     boolean enableTickCallback = Boolean.TRUE.equals(call.argument("enableTickCallback"));
 
     Integer timeSignature = call.argument("timeSignature");
@@ -121,7 +140,11 @@ public class MetronomePlugin implements FlutterPlugin, MethodCallHandler {
     Integer sampleRateValue = call.argument("sampleRate");
     int sampleRate = (sampleRateValue != null) ? sampleRateValue : 44100;
 
-    metronome = new Metronome(mainFileBytes, accentedFileBytes, bpm, timeSignatureValue, volume, sampleRate);
+    Integer preCountBarsValue = call.argument("preCountBars");
+    int preCountBars = (preCountBarsValue != null) ? preCountBarsValue : 0;
+
+    metronome = new Metronome(mainFileBytes, accentedFileBytes, bpm, timeSignatureValue, volume, sampleRate,
+      preCountBars, preCountMainFileBytes, preCountAccentedFileBytes);
 
     if (enableTickCallback && eventTickSink != null) {
       metronome.enableTickCallback(eventTickSink);

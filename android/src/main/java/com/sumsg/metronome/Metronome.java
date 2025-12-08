@@ -18,6 +18,8 @@ public class Metronome {
     private final AudioTrack audioTrack;
     private short[] mainSound;
     private short[] accentedSound;
+    private short[] preCountMainSound;
+    private short[] preCountAccentedSound;
     private short[] audioBuffer;
     private final int SAMPLE_RATE;
     public int audioBpm;
@@ -26,10 +28,13 @@ public class Metronome {
     private boolean updated = false;
     private EventChannel.EventSink eventTickSink;
     private int currentTick = 0;
+    private int preCountBarsConfigured = 0;
+    private boolean isInPreCount = false;
+    private boolean isFirstTick = false;
 
     @SuppressWarnings("deprecation")
     public Metronome(byte[] mainFileBytes, byte[] accentedFileBytes, int bpm, int timeSignature, float volume,
-            int sampleRate) {
+            int sampleRate, int preCountBars, byte[] preCountMainFileBytes, byte[] preCountAccentedFileBytes) {
         SAMPLE_RATE = sampleRate;
         audioBpm = bpm;
         audioVolume = volume;
@@ -40,6 +45,10 @@ public class Metronome {
         } else {
             accentedSound = byteArrayToShortArray(accentedFileBytes);
         }
+        preCountMainSound = (preCountMainFileBytes.length == 0) ? mainSound : byteArrayToShortArray(preCountMainFileBytes);
+        preCountAccentedSound = (preCountAccentedFileBytes.length == 0) ? accentedSound
+                : byteArrayToShortArray(preCountAccentedFileBytes);
+        preCountBarsConfigured = Math.max(0, preCountBars);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             AudioFormat audioFormat = new AudioFormat.Builder()
                     .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
@@ -65,12 +74,19 @@ public class Metronome {
     }
 
     public void play() {
+        play(-1);
+    }
+
+    public void play(int preCountBarsOverride) {
         if (!isPlaying()) {
+            int bars = (preCountBarsOverride >= 0) ? preCountBarsOverride : preCountBarsConfigured;
+            isInPreCount = bars > 0;
+            currentTick = isInPreCount ? -(bars * audioTimeSignature) : 0;
             updated = true;
+            isFirstTick = true;
             onTick();
-            // Send immediate tick event to match iOS behavior
             if (eventTickSink != null) {
-                eventTickSink.success(0);  // Send tick 0 immediately
+                eventTickSink.success(currentTick);
             }
             audioTrack.play();
             startMetronome();
@@ -149,18 +165,24 @@ public class Metronome {
     }
 
     private short[] generateBuffer() {
-        currentTick = 0;
         int framesPerBeat = (int) (SAMPLE_RATE * 60 / (float) audioBpm);
         short[] bufferBar;
         if (audioTimeSignature < 2) {
             bufferBar = new short[framesPerBeat];
-            int soundLength = Math.min(framesPerBeat, mainSound.length);
-            System.arraycopy(mainSound, 0, bufferBar, 0, soundLength);
+            short[] sound = isInPreCount ? preCountAccentedSound : accentedSound;
+            int soundLength = Math.min(framesPerBeat, sound.length);
+            System.arraycopy(sound, 0, bufferBar, 0, soundLength);
         } else {
             int bufferSize = framesPerBeat * audioTimeSignature;
             bufferBar = new short[bufferSize];
             for (int i = 0; i < audioTimeSignature; i++) {
-                short[] sound = (i == 0) ? accentedSound : mainSound;
+                boolean isStrongBeat = (i == 0);
+                short[] sound;
+                if (isInPreCount) {
+                    sound = isStrongBeat ? preCountAccentedSound : preCountMainSound;
+                } else {
+                    sound = isStrongBeat ? accentedSound : mainSound;
+                }
                 int soundLength = Math.min(framesPerBeat, sound.length);
                 System.arraycopy(sound, 0, bufferBar, i * framesPerBeat, soundLength);
             }
@@ -181,15 +203,26 @@ public class Metronome {
 
             @Override
             public void onPeriodicNotification(AudioTrack track) {
-                if (!updated) {
-                    if (audioTimeSignature < 2) {
-                        currentTick = 0;
-                    } else {
-                        currentTick++;
-                        if (currentTick >= audioTimeSignature)
-                            currentTick = 0;
+                if (isFirstTick) {
+                    isFirstTick = false;
+                    return;
+                }
+                if (isInPreCount) {
+                    currentTick++;
+                    if (currentTick == 0) {
+                        isInPreCount = false;
+                        updated = true;
                     }
-                    eventTickSink.success(currentTick);
+                    if (eventTickSink != null) {
+                        eventTickSink.success(currentTick);
+                    }
+                } else {
+                    currentTick++;
+                    if (currentTick >= audioTimeSignature)
+                        currentTick = 0;
+                    if (eventTickSink != null) {
+                        eventTickSink.success(currentTick);
+                    }
                 }
             }
         });
@@ -202,8 +235,11 @@ public class Metronome {
                     if (!isPlaying()) {
                         return;
                     }
-                    if (updated) {
+                    if (updated || audioBuffer == null) {
                         audioBuffer = generateBuffer();
+                    }
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        audioTrack.write(audioBuffer, 0, audioBuffer.length, AudioTrack.WRITE_BLOCKING);
                     } else {
                         audioTrack.write(audioBuffer, 0, audioBuffer.length);
                     }
