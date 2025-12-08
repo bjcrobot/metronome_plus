@@ -20,6 +20,7 @@ supports volume, BPM, time signature and audio source settings.
 * [x] Add support for time signature [#2](https://github.com/biner88/metronome/issues/2)
 * [x] Add windows support
 * [x] Add tickCallback for web
+* [ ] Add pre-count feature (開発中 / In Development)
 
 ## Quick Start 
 
