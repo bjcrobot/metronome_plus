@@ -61,12 +61,19 @@ public class MetronomePlugin implements FlutterPlugin, MethodCallHandler {
         } else {
           metronome.play();
         }
+        result.success(null);  // ★ 重要: play() 完了を Dart に通知
         break;
       case "pause":
-        metronome.pause();
+        if (metronome != null) {
+          metronome.pause();
+        }
+        result.success(null);  // ★ pause() 完了を Dart に通知
         break;
       case "stop":
-        metronome.stop();
+        if (metronome != null) {
+          metronome.stop();
+        }
+        result.success(null);  // ★ stop() 完了を Dart に通知
         break;
       case "getVolume":
         result.success(metronome.audioVolume);
