@@ -66,8 +66,9 @@ class Metronome {
   }
 
   ///play the metronome
-  Future<void> play() async {
-    return MetronomePlatform.instance.play();
+  /// [preCountBars] - Override pre-count bars for this play session (optional)
+  Future<void> play({int? preCountBars}) async {
+    return MetronomePlatform.instance.play(preCountBars: preCountBars);
   }
 
   ///pause the metronome
