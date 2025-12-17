@@ -2,7 +2,7 @@
 
 ## 現状
 - ✅ Android: プリカウント機能実装済み（v0.1.0-android-mvp）
-- ❌ iOS/macOS: プリカウント機能未実装
+- ✅ iOS/macOS: プリカウント機能実装済み（2025年12月17日）
 
 ## Android で適用した修正内容
 
@@ -109,12 +109,37 @@ git checkout -b feature/ios-precount
 ```
 
 ## 完了基準
-- [ ] プリカウント機能が iOS/macOS で動作
-- [ ] 指定小節数（1/2/4）が正確に再生される
-- [ ] BPM/拍子/音源変更時にプリカウントが鳴らない
-- [ ] example アプリで動作確認（iOS Simulator/実機）
-- [ ] コミット＆プッシュ
-- [ ] README.md 更新（iOS: ✅ Completed）
+- [x] プリカウント機能が iOS/macOS で動作
+- [x] 指定小節数（1/2/4）が正確に再生される
+- [x] BPM/拍子/音源変更時にプリカウントが鳴らない
+- [x] example アプリで動作確認（iOS Simulator/実機）
+- [x] コミット＆プッシュ
+- [x] README.md 更新（iOS: ✅ Completed）
+
+## 実装完了（2025年12月17日）
+
+### 実装内容
+- プリカウント音源ファイルのサポート追加
+- `remainingPreCountBarsToWrite` カウンターによる正確な小節数制御
+- `play(preCountBarsOverride:)` メソッド追加
+- `setBPM/setTimeSignature/setAudioFile` での内部再起動時に `play(0)` を使用
+- プリカウント時のマイナスティック対応
+- AVAudioPlayerNodeのバッファスケジューリング方式でプリカウント実装
+  - プリカウント中: `.loops`なしでバッファをスケジュール
+  - バッファ再生完了時のコールバックで次のバッファを生成
+  - プリカウント終了後: メイン音源を`.loops`でループ再生
+
+### テスト結果
+- ✅ プリカウント 1/2/4 小節が正確に再生される
+- ✅ BPM変更時にプリカウントが鳴らない
+- ✅ 拍子変更時にプリカウントが鳴らない  
+- ✅ 音源変更時にプリカウントが鳴らない
+- ✅ 音量調整が正常に動作
+- ✅ iOS Simulator で動作確認済み
+
+### コミット
+- `d72979e`: feat(ios/macos): プリカウント機能を実装
+- `f73296e`: fix(ios/macos): プリカウントバッファの無限ループを修正
 
 ---
 

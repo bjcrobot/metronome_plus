@@ -20,7 +20,7 @@ supports volume, BPM, time signature and audio source settings.
 * [x] Add support for time signature [#2](https://github.com/biner88/metronome/issues/2)
 * [x] Add windows support
 * [x] Add tickCallback for web
-* [x] Add pre-count feature (Android: ✅ Completed, iOS: 🔄 In Progress)
+* [x] Add pre-count feature (Android: ✅ Completed, iOS/macOS: ✅ Completed)
 
 ## Quick Start 
 
@@ -38,8 +38,20 @@ metronome.init(
     // The time signature is the number of beats per measure,default is 4
     timeSignature: 4,
     sampleRate: 44100,
+    // Pre-count bars (0: disabled, 1/2/4: number of bars)
+    preCountBars: 0,
+    // Optional: Custom pre-count sounds
+    preCountMainPath: 'assets/audio/precount_main.wav',
+    preCountAccentedPath: 'assets/audio/precount_accent.wav',
 );
-```
+// Play with default pre-count bars (set in init)
+metronome.play();
+
+// Play with custom pre-count bars (override)
+metronome.play(preCountBars: 2);
+
+// Play without pre-count (skip)
+metronome.play(preCountBars: 0
 
 ### Play
 
@@ -111,9 +123,13 @@ metronome.setAudioFile(
 metronome.setAudioFile(
     mainPath:'assets/audio/snare.wav',
 );
-```
+During pre-count, tick values are negative (e.g., -4, -3, -2, -1 for 1 bar in 4/4 time)
 
-### destroy
+```dart
+metronome.tickStream.listen((int tick) {
+  print("tick: $tick");
+  // Pre-count: -4, -3, -2, -1
+  // Main: 0, 1, 2, 3 (for 4/4 time signature)
 
 ```dart
 metronome.destroy();
