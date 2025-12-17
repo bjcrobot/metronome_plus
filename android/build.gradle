@@ -1,4 +1,4 @@
-group 'com.sumsg.metronome'
+group 'com.sumsg.metronome_plus'
 version '1.0'
 
 buildscript {
@@ -28,7 +28,7 @@ apply plugin: 'com.android.library'
 
 android {
     if (project.android.hasProperty("namespace")) {
-        namespace 'com.sumsg.metronome'
+        namespace 'com.sumsg.metronome_plus'
     }
 
     compileSdk = 35

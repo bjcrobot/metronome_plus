@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:metronome/metronome.dart';
+import 'package:metronome_plus/metronome.dart';
 
 void main() {
   runApp(const MyApp());
@@ -32,7 +32,8 @@ class _MyAppState extends State<MyApp> {
   ];
   String mainFileName = 'claves';
   String accentedFileName = 'woodblock_high';
-  String preCountFileName = 'base';
+  String preCountMainFileName = 'base';
+  String preCountAccentedFileName = 'woodblock_high';
   int currentTick = 0;
   @override
   void initState() {
@@ -41,7 +42,8 @@ class _MyAppState extends State<MyApp> {
       'assets/audio/${mainFileName}44_wav.wav',
       accentedPath: 'assets/audio/${accentedFileName}44_wav.wav',
       preCountBars: preCountBars,
-      preCountAudioPath: 'assets/audio/${preCountFileName}44_wav.wav',
+      preCountMainPath: 'assets/audio/${preCountMainFileName}44_wav.wav',
+      preCountAccentedPath: 'assets/audio/${preCountAccentedFileName}44_wav.wav',
       bpm: bpm,
       volume: vol,
       enableTickCallback: true,
@@ -166,7 +168,17 @@ class _MyAppState extends State<MyApp> {
               Wrap(
                 spacing: 10,
                 runSpacing: 10,
-                children: wavs.map((wav) => _buildPreCountSoundButton(wav)).toList(),
+                children: wavs.map((wav) => _buildPreCountMainSoundButton(wav)).toList(),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Pre-count Accented Sound:',
+                style: TextStyle(fontSize: 20),
+              ),
+              Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: wavs.map((wav) => _buildPreCountAccentedSoundButton(wav)).toList(),
               ),
               const Text(
                 'Main file:',
@@ -293,7 +305,8 @@ class _MyAppState extends State<MyApp> {
           'assets/audio/${mainFileName}44_wav.wav',
           accentedPath: 'assets/audio/${accentedFileName}44_wav.wav',
           preCountBars: preCountBars,
-          preCountAudioPath: 'assets/audio/${preCountFileName}44_wav.wav',
+          preCountMainPath: 'assets/audio/${preCountMainFileName}44_wav.wav',
+          preCountAccentedPath: 'assets/audio/${preCountAccentedFileName}44_wav.wav',
           bpm: bpm,
           volume: vol,
           enableTickCallback: true,
@@ -305,20 +318,47 @@ class _MyAppState extends State<MyApp> {
     );
   }
 
-  Widget _buildPreCountSoundButton(String name) {
+  Widget _buildPreCountMainSoundButton(String name) {
     return ElevatedButton(
       child: Text(
         name,
-        style: TextStyle(color: preCountFileName == name ? Colors.red : null),
+        style: TextStyle(color: preCountMainFileName == name ? Colors.red : null),
       ),
       onPressed: () async {
-        preCountFileName = name;
+        preCountMainFileName = name;
         currentTick = 0;
         await _metronomePlugin.init(
           'assets/audio/${mainFileName}44_wav.wav',
           accentedPath: 'assets/audio/${accentedFileName}44_wav.wav',
           preCountBars: preCountBars,
-          preCountAudioPath: 'assets/audio/${preCountFileName}44_wav.wav',
+          preCountMainPath: 'assets/audio/${preCountMainFileName}44_wav.wav',
+          preCountAccentedPath: 'assets/audio/${preCountAccentedFileName}44_wav.wav',
+          bpm: bpm,
+          volume: vol,
+          enableTickCallback: true,
+          timeSignature: timeSignature,
+          sampleRate: 44100,
+        );
+        setState(() {});
+      },
+    );
+  }
+
+  Widget _buildPreCountAccentedSoundButton(String name) {
+    return ElevatedButton(
+      child: Text(
+        name,
+        style: TextStyle(color: preCountAccentedFileName == name ? Colors.red : null),
+      ),
+      onPressed: () async {
+        preCountAccentedFileName = name;
+        currentTick = 0;
+        await _metronomePlugin.init(
+          'assets/audio/${mainFileName}44_wav.wav',
+          accentedPath: 'assets/audio/${accentedFileName}44_wav.wav',
+          preCountBars: preCountBars,
+          preCountMainPath: 'assets/audio/${preCountMainFileName}44_wav.wav',
+          preCountAccentedPath: 'assets/audio/${preCountAccentedFileName}44_wav.wav',
           bpm: bpm,
           volume: vol,
           enableTickCallback: true,

@@ -48,7 +48,8 @@ class MetronomeWeb extends MetronomePlatform {
     int timeSignature = 4,
     int sampleRate = 44100,
     int preCountBars = 0,
-    String preCountAudioPath = '',
+    String preCountMainPath = '',
+    String preCountAccentedPath = '',
   }) async {
     _sampleRate = sampleRate;
     _audioContext = web.AudioContext(

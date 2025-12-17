@@ -20,12 +20,12 @@ public class MetronomePlugin: NSObject, FlutterPlugin {
 #else
     let messenger = registrar.messenger
 #endif
-        instance.channel = FlutterMethodChannel(name: "metronome", binaryMessenger: messenger)
+        instance.channel = FlutterMethodChannel(name: "metronome_plus", binaryMessenger: messenger)
 
         registrar.addApplicationDelegate(instance)
         registrar.addMethodCallDelegate(instance, channel: instance.channel!)
         //
-        instance.eventTick = FlutterEventChannel(name: "metronome_tick", binaryMessenger: messenger)
+        instance.eventTick = FlutterEventChannel(name: "metronome_plus_tick", binaryMessenger: messenger)
         instance.eventTick?.setStreamHandler(instance.eventTickListener )
     }
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {

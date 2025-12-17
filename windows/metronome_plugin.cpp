@@ -13,12 +13,12 @@ namespace metronome
   {
     auto methodChannel =
         std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
-            registrar->messenger(), "metronome",
+            registrar->messenger(), "metronome_plus",
             &flutter::StandardMethodCodec::GetInstance());
 
     auto eventChannel =
         std::make_unique<flutter::EventChannel<flutter::EncodableValue>>(
-            registrar->messenger(), "metronome_tick",
+            registrar->messenger(), "metronome_plus_tick",
             &flutter::StandardMethodCodec::GetInstance());
 
     auto plugin = std::make_unique<MetronomePlugin>();
