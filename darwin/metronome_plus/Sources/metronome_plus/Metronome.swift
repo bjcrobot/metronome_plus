@@ -294,10 +294,97 @@ class Metronome {
         
         //
         self.startTime = self.audioPlayerNode.lastRenderTime
-        self.audioPlayerNode.scheduleBuffer(bufferBar, at: nil, options: .loops,completionHandler: nil)
+        
+        // プリカウント中はループなし、完了時に次のバッファをスケジュール
+        if isInPreCount {
+            self.audioPlayerNode.scheduleBuffer(bufferBar, at: nil, options: [], completionHandler: { [weak self] in
+                guard let self = self else { return }
+                if self.isPlaying {
+                    // プリカウント終了後、またはまだプリカウント中の場合、次のバッファをスケジュール
+                    DispatchQueue.main.async {
+                        self.scheduleNextBuffer()
+                    }
+                }
+            })
+        } else {
+            // メイン再生中はループ
+            self.audioPlayerNode.scheduleBuffer(bufferBar, at: nil, options: .loops, completionHandler: nil)
+        }
+        
         self.audioPlayerNode.play()
         startBeatTimer()
         return bufferBar
+    }
+    
+    private func scheduleNextBuffer() {
+        if !isPlaying {
+            return
+        }
+        
+        let usePrecount = remainingPreCountBarsToWrite > 0
+        let mainFile = usePrecount ? audioFilePreCountMain : audioFileMain
+        let accentedFile = usePrecount ? audioFilePreCountAccented : audioFileAccented
+        
+        mainFile.framePosition = 0
+        accentedFile.framePosition = 0
+        
+        let beatLength = AVAudioFrameCount(Double(self.sampleRate) * 60 / Double(self.audioBpm))
+        let bufferMainClick = AVAudioPCMBuffer(pcmFormat: mainFile.processingFormat, frameCapacity: beatLength)!
+        try! mainFile.read(into: bufferMainClick)
+        bufferMainClick.frameLength = beatLength
+        
+        let bufferBar: AVAudioPCMBuffer
+        if self.audioTimeSignature < 2 {
+            bufferBar = AVAudioPCMBuffer(pcmFormat: mainFile.processingFormat, frameCapacity: beatLength)!
+            bufferBar.frameLength = beatLength
+            
+            let channelCount = Int(mainFile.processingFormat.channelCount)
+            let mainClickArray = Array(UnsafeBufferPointer(start: bufferMainClick.floatChannelData![0], count: channelCount * Int(beatLength)))
+            
+            bufferBar.floatChannelData!.pointee.update(from: mainClickArray, count: channelCount * Int(bufferBar.frameLength))
+        } else {
+            let bufferAccentedClick = AVAudioPCMBuffer(pcmFormat: accentedFile.processingFormat, frameCapacity: beatLength)!
+            try! accentedFile.read(into: bufferAccentedClick)
+            bufferAccentedClick.frameLength = beatLength
+            
+            bufferBar = AVAudioPCMBuffer(pcmFormat: mainFile.processingFormat, frameCapacity: beatLength * AVAudioFrameCount(self.audioTimeSignature))!
+            bufferBar.frameLength = beatLength * AVAudioFrameCount(self.audioTimeSignature)
+            
+            let channelCount = Int(mainFile.processingFormat.channelCount)
+            let mainClickArray = Array(UnsafeBufferPointer(start: bufferMainClick.floatChannelData![0], count: channelCount * Int(beatLength)))
+            let accentedClickArray = Array(UnsafeBufferPointer(start: bufferAccentedClick.floatChannelData![0], count: channelCount * Int(beatLength)))
+            
+            var barArray = [Float]()
+            for i in 0..<self.audioTimeSignature {
+                if i == 0 {
+                    barArray.append(contentsOf: accentedClickArray)
+                } else {
+                    barArray.append(contentsOf: mainClickArray)
+                }
+            }
+            
+            bufferBar.floatChannelData!.pointee.update(from: barArray, count: channelCount * Int(bufferBar.frameLength))
+        }
+        
+        // Consume one scheduled pre-count bar if used
+        if usePrecount && remainingPreCountBarsToWrite > 0 {
+            remainingPreCountBarsToWrite -= 1
+        }
+        
+        // まだプリカウント中なら次のバッファもループなし
+        if isInPreCount {
+            self.audioPlayerNode.scheduleBuffer(bufferBar, at: nil, options: [], completionHandler: { [weak self] in
+                guard let self = self else { return }
+                if self.isPlaying {
+                    DispatchQueue.main.async {
+                        self.scheduleNextBuffer()
+                    }
+                }
+            })
+        } else {
+            // プリカウント終了、メイン音源をループ再生
+            self.audioPlayerNode.scheduleBuffer(bufferBar, at: nil, options: .loops, completionHandler: nil)
+        }
     }
     
     func stopBeatTimer() {
