@@ -31,6 +31,8 @@ public class Metronome {
     private int preCountBarsConfigured = 0;
     private boolean isInPreCount = false;
     private boolean isFirstTick = false;
+    // How many pre-count bars remain to be written into the audio queue
+    private int remainingPreCountBarsToWrite = 0;
 
     @SuppressWarnings("deprecation")
     public Metronome(byte[] mainFileBytes, byte[] accentedFileBytes, int bpm, int timeSignature, float volume,
@@ -82,6 +84,7 @@ public class Metronome {
             int bars = (preCountBarsOverride >= 0) ? preCountBarsOverride : preCountBarsConfigured;
             isInPreCount = bars > 0;
             currentTick = isInPreCount ? -(bars * audioTimeSignature) : 0;
+            remainingPreCountBarsToWrite = Math.max(0, bars);
             updated = true;
             isFirstTick = true;
             onTick();
@@ -167,9 +170,11 @@ public class Metronome {
     private short[] generateBuffer() {
         int framesPerBeat = (int) (SAMPLE_RATE * 60 / (float) audioBpm);
         short[] bufferBar;
+        // Decide whether this bar should use pre-count sounds
+        boolean usePrecount = remainingPreCountBarsToWrite > 0;
         if (audioTimeSignature < 2) {
             bufferBar = new short[framesPerBeat];
-            short[] sound = isInPreCount ? preCountAccentedSound : accentedSound;
+            short[] sound = usePrecount ? preCountAccentedSound : accentedSound;
             int soundLength = Math.min(framesPerBeat, sound.length);
             System.arraycopy(sound, 0, bufferBar, 0, soundLength);
         } else {
@@ -178,7 +183,7 @@ public class Metronome {
             for (int i = 0; i < audioTimeSignature; i++) {
                 boolean isStrongBeat = (i == 0);
                 short[] sound;
-                if (isInPreCount) {
+                if (usePrecount) {
                     sound = isStrongBeat ? preCountAccentedSound : preCountMainSound;
                 } else {
                     sound = isStrongBeat ? accentedSound : mainSound;
@@ -186,6 +191,10 @@ public class Metronome {
                 int soundLength = Math.min(framesPerBeat, sound.length);
                 System.arraycopy(sound, 0, bufferBar, i * framesPerBeat, soundLength);
             }
+        }
+        // Consume one scheduled pre-count bar if used
+        if (usePrecount && remainingPreCountBarsToWrite > 0) {
+            remainingPreCountBarsToWrite--;
         }
         // updated フラグはここでは変更しない
         return bufferBar;
@@ -235,10 +244,10 @@ public class Metronome {
                     if (!isPlaying()) {
                         return;
                     }
-                    if (updated || audioBuffer == null) {
-                        audioBuffer = generateBuffer();
-                        updated = false;  // バッファ生成後すぐにリセット
-                    }
+                    // Always prepare the next bar buffer so that we don't repeat the same buffer.
+                    // The buffer content is determined by remainingPreCountBarsToWrite and current settings.
+                    audioBuffer = generateBuffer();
+                    updated = false;  // バッファ生成後すぐにリセット（互換のために維持）
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                         audioTrack.write(audioBuffer, 0, audioBuffer.length, AudioTrack.WRITE_BLOCKING);
                     } else {
