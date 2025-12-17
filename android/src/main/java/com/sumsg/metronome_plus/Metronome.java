@@ -110,7 +110,7 @@ public class Metronome {
             audioBpm = bpm;
             if (isPlaying()) {
                 pause();
-                play();
+                play(0);
             }
         }
     }
@@ -120,7 +120,7 @@ public class Metronome {
             audioTimeSignature = timeSignature;
             if (isPlaying()) {
                 pause();
-                play();
+                play(0);
             }
         }
     }
