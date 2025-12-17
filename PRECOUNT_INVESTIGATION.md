@@ -189,7 +189,66 @@ tick: 0   ← メイン開始
 
 ---
 
+## 解決策（2025年12月17日追記）
+
+### 採用したアプローチ
+**バッファ再利用の廃止 + プリカウント小節カウンター導入**
+
+#### 実装内容
+
+1. **`remainingPreCountBarsToWrite` フィールド追加**
+   - プリカウント開始時に残り小節数を初期化
+   - `generateBuffer()` でプリカウントバッファを生成するたびにデクリメント
+
+2. **バッファの毎回再生成**
+   - `updated` フラグに依存せず、ループごとに `generateBuffer()` を必ず呼び出し
+   - 同一バッファの再 write を防止
+
+3. **内部再起動時のプリカウント抑制**
+   - `setBPM()`, `setTimeSignature()`, `setAudioFile()` の内部再起動時は `play(0)` を使用
+   - 再生中のパラメータ変更ではプリカウントをスキップし、即座にメイン拍に移行
+
+#### コード例（Metronome.java）
+
+```java
+private int remainingPreCountBarsToWrite = 0;
+
+public void play(int preCountBarsOverride) {
+    // ...
+    remainingPreCountBarsToWrite = preCountBars;
+    // ...
+}
+
+private short[] generateBuffer() {
+    // ...
+    boolean usePrecount = remainingPreCountBarsToWrite > 0;
+    if (usePrecount) {
+        remainingPreCountBarsToWrite--;
+    }
+    // ... プリカウント音源 or メイン音源を選択
+}
+
+private void startMetronome() {
+    while (isPlaying()) {
+        synchronized (mLock) {
+            // 毎回バッファを再生成（updated 不要）
+            audioBuffer = generateBuffer();
+            audioTrack.write(audioBuffer, 0, audioBuffer.length, WRITE_BLOCKING);
+        }
+    }
+}
+```
+
+### 結果
+- ✅ プリカウント +1 小節バグ解決
+- ✅ 指定小節数（1/2/4）が正確に再生される
+- ✅ 再生中の BPM/拍子/音源変更でプリカウントが鳴らない UX 向上
+
+### タグ
+- `v0.1.0-android-mvp`: Android 最低動作版（本修正適用済み）
+
+---
+
 **次のステップ:**
-- MODE_STATIC の検証
-- `getPlaybackHeadPosition()` を使ったカスタムペーシングの実装
-- または、プリカウント機能を別のアプローチで再設計
+- iOS/macOS プラットフォームでも同様の問題がないか検証
+- ドキュメント整備（README への機能説明追加）
