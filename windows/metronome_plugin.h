@@ -1,5 +1,5 @@
-#ifndef METRONOME_PLUGIN_H_
-#define METRONOME_PLUGIN_H_
+#ifndef METRONOME_PLUS_PLUGIN_H_
+#define METRONOME_PLUS_PLUGIN_H_
 
 #include <flutter/method_channel.h>
 #include <flutter/plugin_registrar_windows.h>
@@ -32,4 +32,4 @@ namespace metronome
 
 } // namespace metronome
 
-#endif // METRONOME_PLUGIN_H_
+#endif // METRONOME_PLUS_PLUGIN_H_

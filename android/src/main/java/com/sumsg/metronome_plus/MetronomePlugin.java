@@ -1,4 +1,4 @@
-package com.sumsg.metronome;
+package com.sumsg.metronome_plus;
 
 import androidx.annotation.NonNull;
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
@@ -26,11 +26,11 @@ public class MetronomePlugin implements FlutterPlugin, MethodCallHandler {
 
   @Override
   public void onAttachedToEngine(@NonNull FlutterPluginBinding flutterPluginBinding) {
-    channel = new MethodChannel(flutterPluginBinding.getBinaryMessenger(), "metronome");
+    channel = new MethodChannel(flutterPluginBinding.getBinaryMessenger(), "metronome_plus");
     channel.setMethodCallHandler(this);
     //
     eventTick = new EventChannel(flutterPluginBinding.getBinaryMessenger(),
-        "metronome_tick");
+        "metronome_plus_tick");
     eventTick.setStreamHandler(new EventChannel.StreamHandler() {
       @Override
       public void onListen(Object args, EventChannel.EventSink events) {

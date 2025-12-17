@@ -1,5 +1,5 @@
-#ifndef FLUTTER_PLUGIN_METRONOME_PLUGIN_C_API_H_
-#define FLUTTER_PLUGIN_METRONOME_PLUGIN_C_API_H_
+#ifndef FLUTTER_PLUGIN_METRONOME_PLUS_PLUGIN_C_API_H_
+#define FLUTTER_PLUGIN_METRONOME_PLUS_PLUGIN_C_API_H_
 
 #include <flutter_plugin_registrar.h>
 
@@ -13,7 +13,7 @@
 extern "C" {
 #endif
 
-FLUTTER_PLUGIN_EXPORT void MetronomePluginCApiRegisterWithRegistrar(
+FLUTTER_PLUGIN_EXPORT void MetronomePlusPluginCApiRegisterWithRegistrar(
     FlutterDesktopPluginRegistrarRef registrar);
 
 #if defined(__cplusplus)

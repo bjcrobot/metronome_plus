@@ -1,10 +1,10 @@
-#include "include/metronome/metronome_plugin_c_api.h"
+#include "include/metronome_plus/metronome_plus_plugin_c_api.h"
 
 #include <flutter/plugin_registrar_windows.h>
 
 #include "metronome_plugin.h"
 
-void MetronomePluginCApiRegisterWithRegistrar(
+void MetronomePlusPluginCApiRegisterWithRegistrar(
     FlutterDesktopPluginRegistrarRef registrar) {
   metronome::MetronomePlugin::RegisterWithRegistrar(
       flutter::PluginRegistrarManager::GetInstance()

@@ -43,7 +43,7 @@ flutter:
   plugin:
     platforms:
       android:
-        package: com.sumsg.metronome
+        package: com.sumsg.metronome_plus
         pluginClass: MetronomePlugin
       ios:
         pluginClass: MetronomePlugin
@@ -52,7 +52,7 @@ flutter:
         pluginClass: MetronomePlugin
         sharedDarwinSource: true
       windows:
-        pluginClass: MetronomePluginCApi
+        pluginClass: MetronomePlusPluginCApi
       web:
         pluginClass: MetronomeWeb
         fileName: metronome_web.dart

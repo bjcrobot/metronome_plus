@@ -1,4 +1,4 @@
-package com.sumsg.metronome;
+package com.sumsg.metronome_plus;
 
 import static android.media.AudioTrack.PLAYSTATE_PLAYING;
 

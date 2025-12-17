@@ -10,8 +10,8 @@ import 'metronome_platform_interface.dart';
 class MethodChannelMetronome extends MetronomePlatform {
   /// The method channel used to interact with the native platform.
   @visibleForTesting
-  final methodChannel = const MethodChannel('metronome');
-  final eventTickChannel = const EventChannel("metronome_tick");
+  final methodChannel = const MethodChannel('metronome_plus');
+  final eventTickChannel = const EventChannel("metronome_plus_tick");
 
   MethodChannelMetronome() {
     eventTickChannel.receiveBroadcastStream().listen(
