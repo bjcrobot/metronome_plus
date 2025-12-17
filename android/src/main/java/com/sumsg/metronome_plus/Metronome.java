@@ -135,7 +135,7 @@ public class Metronome {
         if (mainFileBytes.length > 0 || accentedFileBytes.length > 0) {
             if (isPlaying()) {
                 pause();
-                play();
+                play(0);  // 内部再起動のためプリカウントをスキップ
             }
         }
     }
