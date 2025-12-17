@@ -9,25 +9,46 @@ class Metronome {
     //
     private var audioFileMain: AVAudioFile
     private var audioFileAccented: AVAudioFile
+    private var audioFilePreCountMain: AVAudioFile
+    private var audioFilePreCountAccented: AVAudioFile
     public var audioBpm: Int = 120
     public var audioVolume: Float = 0.5
     public var audioTimeSignature: Int = 0
+    
+    // プリカウント関連
+    private var preCountBarsConfigured: Int = 0
+    private var isInPreCount: Bool = false
+    private var currentTick: Int = 0
+    private var isFirstTick: Bool = false
+    private var remainingPreCountBarsToWrite: Int = 0
 
     private var sampleRate: Int = 44100
     private var timer: DispatchSourceTimer?
     private var startTime: AVAudioTime?
     /// Initialize the metronome with the main and accented audio files.
-    init(mainFileBytes: Data, accentedFileBytes: Data, bpm: Int, timeSignature: Int = 0, volume: Float, sampleRate: Int) {
+    init(mainFileBytes: Data, accentedFileBytes: Data, bpm: Int, timeSignature: Int = 0, volume: Float, sampleRate: Int, preCountBars: Int = 0, preCountMainFileBytes: Data = Data(), preCountAccentedFileBytes: Data = Data()) {
         self.sampleRate = sampleRate
         audioTimeSignature = timeSignature
         audioBpm = bpm
         audioVolume = volume
+        preCountBarsConfigured = max(0, preCountBars)
         // Initialize audio files
         audioFileMain = try! AVAudioFile(fromData: mainFileBytes)
         if accentedFileBytes.isEmpty {
             audioFileAccented = audioFileMain
         }else{
             audioFileAccented = try! AVAudioFile(fromData: accentedFileBytes)
+        }
+        // Initialize pre-count audio files
+        if preCountMainFileBytes.isEmpty {
+            audioFilePreCountMain = audioFileMain
+        } else {
+            audioFilePreCountMain = try! AVAudioFile(fromData: preCountMainFileBytes)
+        }
+        if preCountAccentedFileBytes.isEmpty {
+            audioFilePreCountAccented = audioFileAccented
+        } else {
+            audioFilePreCountAccented = try! AVAudioFile(fromData: preCountAccentedFileBytes)
         }
 #if os(iOS)
         do {
@@ -67,7 +88,7 @@ class Metronome {
 #endif
     }
     /// Start the metronome.
-    func play() {
+    func play(preCountBarsOverride: Int = -1) {
         if !audioEngine.isRunning {
             do {
                 try audioEngine.start()
@@ -76,6 +97,17 @@ class Metronome {
                 return
             }
         }
+        
+        let bars = (preCountBarsOverride >= 0) ? preCountBarsOverride : preCountBarsConfigured
+        isInPreCount = bars > 0
+        currentTick = isInPreCount ? -(bars * audioTimeSignature) : 0
+        remainingPreCountBarsToWrite = max(0, bars)
+        isFirstTick = true
+        
+        if eventTick != nil {
+            eventTick?.send(res: currentTick)
+        }
+        
         audioBuffer = generateBuffer()
     }
 
@@ -100,7 +132,7 @@ class Metronome {
             audioBpm = bpm
             if isPlaying {
                 pause()
-                play()
+                play(preCountBarsOverride: 0)
             }
         }
     }
@@ -110,7 +142,7 @@ class Metronome {
             audioTimeSignature = timeSignature
             if isPlaying {
                 pause()
-                play()
+                play(preCountBarsOverride: 0)
             }
         }
     }
@@ -125,7 +157,7 @@ class Metronome {
         if !mainFileBytes.isEmpty || !accentedFileBytes.isEmpty {
             if isPlaying {
                 pause()
-                play()
+                play(preCountBarsOverride: 0)
             }
         }
     }
@@ -207,33 +239,39 @@ class Metronome {
 #endif
     /// Generate buffer with accents based on time signature
     private func generateBuffer() -> AVAudioPCMBuffer {
-        audioFileMain.framePosition = 0
-        audioFileAccented.framePosition = 0
+        // Decide whether this bar should use pre-count sounds
+        let usePrecount = remainingPreCountBarsToWrite > 0
+        
+        let mainFile = usePrecount ? audioFilePreCountMain : audioFileMain
+        let accentedFile = usePrecount ? audioFilePreCountAccented : audioFileAccented
+        
+        mainFile.framePosition = 0
+        accentedFile.framePosition = 0
 
         let beatLength = AVAudioFrameCount(Double(self.sampleRate) * 60 / Double(self.audioBpm))
         // let beatLength = AVAudioFrameCount(audioFileMain.processingFormat.sampleRate * 60 / Double(self.audioBpm))
-        let bufferMainClick = AVAudioPCMBuffer(pcmFormat: audioFileMain.processingFormat, frameCapacity: beatLength)!
-        try! audioFileMain.read(into: bufferMainClick)
+        let bufferMainClick = AVAudioPCMBuffer(pcmFormat: mainFile.processingFormat, frameCapacity: beatLength)!
+        try! mainFile.read(into: bufferMainClick)
         bufferMainClick.frameLength = beatLength
 
         let bufferBar: AVAudioPCMBuffer
         if self.audioTimeSignature < 2 {
-            bufferBar = AVAudioPCMBuffer(pcmFormat: audioFileMain.processingFormat, frameCapacity: beatLength)!
+            bufferBar = AVAudioPCMBuffer(pcmFormat: mainFile.processingFormat, frameCapacity: beatLength)!
             bufferBar.frameLength = beatLength
 
-            let channelCount = Int(audioFileMain.processingFormat.channelCount)
+            let channelCount = Int(mainFile.processingFormat.channelCount)
             let mainClickArray = Array(UnsafeBufferPointer(start: bufferMainClick.floatChannelData![0], count: channelCount * Int(beatLength)))
 
             bufferBar.floatChannelData!.pointee.update(from: mainClickArray, count: channelCount * Int(bufferBar.frameLength))
         } else {
-            let bufferAccentedClick = AVAudioPCMBuffer(pcmFormat: audioFileAccented.processingFormat, frameCapacity: beatLength)!
-            try! audioFileAccented.read(into: bufferAccentedClick)
+            let bufferAccentedClick = AVAudioPCMBuffer(pcmFormat: accentedFile.processingFormat, frameCapacity: beatLength)!
+            try! accentedFile.read(into: bufferAccentedClick)
             bufferAccentedClick.frameLength = beatLength
 
-            bufferBar = AVAudioPCMBuffer(pcmFormat: audioFileMain.processingFormat, frameCapacity: beatLength * AVAudioFrameCount(self.audioTimeSignature))!
+            bufferBar = AVAudioPCMBuffer(pcmFormat: mainFile.processingFormat, frameCapacity: beatLength * AVAudioFrameCount(self.audioTimeSignature))!
             bufferBar.frameLength = beatLength * AVAudioFrameCount(self.audioTimeSignature)
 
-            let channelCount = Int(audioFileMain.processingFormat.channelCount)
+            let channelCount = Int(mainFile.processingFormat.channelCount)
             let mainClickArray = Array(UnsafeBufferPointer(start: bufferMainClick.floatChannelData![0], count: channelCount * Int(beatLength)))
             let accentedClickArray = Array(UnsafeBufferPointer(start: bufferAccentedClick.floatChannelData![0], count: channelCount * Int(beatLength)))
 
@@ -248,6 +286,12 @@ class Metronome {
 
             bufferBar.floatChannelData!.pointee.update(from: barArray, count: channelCount * Int(bufferBar.frameLength))
         }
+        
+        // Consume one scheduled pre-count bar if used
+        if usePrecount && remainingPreCountBarsToWrite > 0 {
+            remainingPreCountBarsToWrite -= 1
+        }
+        
         //
         self.startTime = self.audioPlayerNode.lastRenderTime
         self.audioPlayerNode.scheduleBuffer(bufferBar, at: nil, options: .loops,completionHandler: nil)
@@ -271,15 +315,31 @@ class Metronome {
         timer?.schedule(deadline: .now(), repeating: beatDuration, leeway: .milliseconds(10))
         timer?.setEventHandler { [weak self] in
             guard let self = self else { return }
-            guard let startTime = self.startTime,
-                  let currentTime = self.audioPlayerNode.lastRenderTime,
-                  let elapsedTime = self.getElapsedTime(from: startTime, to: currentTime) else { return }
+            
+            if self.isFirstTick {
+                self.isFirstTick = false
+                return
+            }
+            
+            if self.isInPreCount {
+                self.currentTick += 1
+                if self.currentTick == 0 {
+                    self.isInPreCount = false
+                }
+                DispatchQueue.main.async {
+                    self.eventTick?.send(res: self.currentTick)
+                }
+            } else {
+                guard let startTime = self.startTime,
+                      let currentTime = self.audioPlayerNode.lastRenderTime,
+                      let elapsedTime = self.getElapsedTime(from: startTime, to: currentTime) else { return }
 
-            let currentBeat = Int(elapsedTime / beatDuration)
-            let currentTick = (self.audioTimeSignature > 1) ? (currentBeat % self.audioTimeSignature) : 0
+                let currentBeat = Int(elapsedTime / beatDuration)
+                let currentTickValue = (self.audioTimeSignature > 1) ? (currentBeat % self.audioTimeSignature) : 0
 
-            DispatchQueue.main.async {
-                self.eventTick?.send(res: currentTick)
+                DispatchQueue.main.async {
+                    self.eventTick?.send(res: currentTickValue)
+                }
             }
         }
 

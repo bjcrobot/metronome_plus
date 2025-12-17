@@ -35,7 +35,8 @@ public class MetronomePlugin: NSObject, FlutterPlugin {
                   metronomeInit(attributes: attributes)
                 break;
               case "play":
-                  metronome?.play()
+                  let preCountBarsOverride = attributes?["preCountBars"] as? Int
+                  metronome?.play(preCountBarsOverride: preCountBarsOverride ?? -1)
                 break;
               case "pause":
                   metronome?.pause()
@@ -97,12 +98,28 @@ public class MetronomePlugin: NSObject, FlutterPlugin {
         let mainBytes: Data = mainFileBytes.data
         let accentedBytes: Data = accentedFileBytes.data
         
+        let preCountMainFileBytes = (attributes?["preCountMainFileBytes"] as? FlutterStandardTypedData) ?? FlutterStandardTypedData()
+        let preCountAccentedFileBytes = (attributes?["preCountAccentedFileBytes"] as? FlutterStandardTypedData) ?? FlutterStandardTypedData()
+        let preCountMainBytes: Data = preCountMainFileBytes.data
+        let preCountAccentedBytes: Data = preCountAccentedFileBytes.data
+        
         let enableTickCallback: Bool = (attributes?["enableTickCallback"] as? Bool) ?? true
         let timeSignature: Int = (attributes?["timeSignature"] as? Int) ?? 0
         let bpm: Int = (attributes?["bpm"] as? Int) ?? 120
         let volume: Float = (attributes?["volume"] as? Float) ?? 0.5
         let sampleRate: Int = (attributes?["sampleRate"] as? Int) ?? 44100
-        metronome =  Metronome( mainFileBytes:mainBytes,accentedFileBytes: accentedBytes,bpm:bpm,timeSignature:timeSignature,volume:volume,sampleRate:sampleRate)
+        let preCountBars: Int = (attributes?["preCountBars"] as? Int) ?? 0
+        metronome = Metronome(
+            mainFileBytes: mainBytes,
+            accentedFileBytes: accentedBytes,
+            bpm: bpm,
+            timeSignature: timeSignature,
+            volume: volume,
+            sampleRate: sampleRate,
+            preCountBars: preCountBars,
+            preCountMainFileBytes: preCountMainBytes,
+            preCountAccentedFileBytes: preCountAccentedBytes
+        )
         if(enableTickCallback){
             metronome?.enableTickCallback(_eventTickSink: eventTickListener);
         }
